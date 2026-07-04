@@ -1656,11 +1656,49 @@ def main():
     )
     app.add_handler(penerima_conv)
 
+    # ── Register bot commands menu ──
+    # Shows up when user types / in chat
+    async def set_commands(app):
+        await app.bot.set_my_commands([
+            ("start", "🏠 Menu utama"),
+            ("harian", "📋 Input laporan harian"),
+            ("mingguan", "📊 Input laporan mingguan"),
+            ("mingguan_auto", "🤖 Auto-summary mingguan"),
+            ("penerima", "👥 Report penerima manfaat"),
+            ("juknis", "📚 Akses JUKNIS lengkap"),
+            ("status", "📈 Status operasional hari ini"),
+            ("help", "❓ Bantuan"),
+            ("cancel", "⛔ Batalkan sesi"),
+        ])
+        print("✅ Bot commands registered")
+
     # ── Error handler ──
     app.add_error_handler(error_handler)
 
     # ── Start polling ──
     print("✅ SPPG Bot is running...")
+
+    # Set bot commands via a one-time job on startup
+    async def set_commands_callback(app):
+        await app.bot.set_my_commands([
+            ("start", "🏠 Menu utama"),
+            ("harian", "📋 Input laporan harian"),
+            ("mingguan", "📊 Input laporan mingguan"),
+            ("mingguan_auto", "🤖 Auto-summary mingguan"),
+            ("penerima", "👥 Report penerima manfaat"),
+            ("juknis", "📚 Akses JUKNIS lengkap"),
+            ("status", "📈 Status operasional hari ini"),
+            ("help", "❓ Bantuan"),
+            ("cancel", "⛔ Batalkan sesi"),
+        ])
+        print("✅ Bot commands registered")
+
+    # Use post_init to set commands on startup
+    async def post_init(application):
+        await set_commands_callback(application)
+        return application
+
+    app.post_init = post_init
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
