@@ -1,0 +1,8 @@
+sppg-report/bot/.env
+sppg-report/__pycache__/
+sppg-report/**/__pycache__/
+sppg-report/data/**/*.xlsx
+sppg-report/data/**/*.json
+*.pyc
+__pycache__/
+.env
