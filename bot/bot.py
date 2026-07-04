@@ -22,7 +22,9 @@ from utils import (
     range_minggu
 )
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, FSInputFile
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+# In ptb v22.x, FSInputFile = InputFile (renamed in later versions)
+from telegram._files.inputfile import InputFile as FSInputFile
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
     MessageHandler, filters, ConversationHandler,
@@ -1259,6 +1261,7 @@ def main():
         },
         fallbacks=[CommandHandler("cancel", cancel)],
         allow_reentry=True,
+        per_message=False,
     )
     app.add_handler(penerima_conv)
 
