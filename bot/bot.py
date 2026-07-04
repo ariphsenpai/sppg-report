@@ -168,55 +168,345 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle menu button callbacks"""
-    query = update.callback_query
-    await query.answer()
+JUKNIS_MENU = """
+📚 *JUKNIS SPPG MBG 2026*
+Keputusan Kepala BGN No. 401.1 Tahun 2025
 
-    action = query.data
+Pilih menu untuk detail:
+"""
 
-    if action == "menu_harian":
-        await query.edit_message_text(
-            "📋 *LAPORAN HARIAN*\n\n"
-            "Ketik /harian untuk memulai input laporan operasional harian.\n\n"
-            "Data yang diisi:\n"
-            "• Target & Produksi\n"
-            "• Rincian penerima manfaat\n"
-            "• Menu hari ini\n"
-            "• Waste makanan (kg)\n"
-            "• Masalah & feedback PM\n"
-            "• Catatan tambahan",
-            parse_mode="Markdown"
-        )
-    elif action == "menu_mingguan":
-        await query.edit_message_text(
-            "📊 *LAPORAN MINGGUAN*\n\n"
-            "Ada 2 cara:\n\n"
-            "1️⃣ *Auto-Summary* (langsung dari data harian)\n"
-            "   Ketik: /mingguan_auto\n\n"
-            "2️⃣ *Manual* (analisa + rekomendasi sendiri)\n"
-            "   Ketik: /mingguan\n\n"
-            "Pilih sesuai kebutuhan.",
-            parse_mode="Markdown"
-        )
-    elif action == "menu_penerima":
-        await query.edit_message_text(
-            "📑 *REPORT PENERIMA MANFAAT*\n\n"
-            "Ketik /penerima untuk update data penerima manfaat.\n\n"
-            "Bisa dari:\n"
-            "• Link Google Sheets\n"
-            "• Upload file CSV\n"
-            "• Input manual\n\n"
-            "Format kolom: Waktu, Tempat, Besar, Tendik, Kecil",
-            parse_mode="Markdown"
-        )
-    elif action == "menu_juknis":
-        await query.edit_message_text(
-            JUKNIS_MENU,
-            parse_mode="Markdown"
-        )
-    elif action == "menu_status":
-        await show_status(update, context)
+# ── JUKNIS SUB MENU CONTENT ──
+
+JUKNIS_STRUKTUR = """
+🏢 *STRUKTUR ORGANISASI SPPG*
+
+*1. KEPALA SPPG (Ka.SPPG)*
+• Status: SPPI (Sarjana Penggerak Pembangunan Indonesia)
+• Tugas:
+  - Koordinator pengelola SPPG
+  - Approver Virtual Account (VA)
+  - Penanggung jawab operasional SPPG
+  - Tanda tangan laporan & BAST
+  - Monitoring keseluruhan program
+• Jumlah: 1 orang per SPPG
+• Dibawah: Koordinator SPPG Kecamatan / KPPG
+
+*2. PENGAWAS GIZI*
+• Tugas:
+  - Menyusun menu sesuai standar gizi (AKG)
+  - Quality Control bahan pangan & makanan
+  - Edukasi gizi & keamanan pangan
+  - Pantau kecukupan gizi per kelompok sasaran
+  - Evaluasi menu berdasarkan waste & feedback
+• Jumlah: 1 orang per SPPG
+
+*3. PENGAWAS KEUANGAN*
+• Tugas:
+  - Merencanakan anggaran belanja harian
+  - Pengelolaan keuangan & kas kecil (petty cash)
+  - Manajemen logistik bahan baku
+  - Input laporan ke harian/2 mingguan/bulanan
+  - Atur jadwal & insentif relawan
+  - Rekonsiliasi dana VA
+• Jumlah: 1 orang per SPPG
+
+*4. PENGAWAS SANITASI*
+• Tugas:
+  - Inspeksi kebersihan lingkungan SPPG (dalam & luar)
+  - Higiene sanitasi peralatan masak
+  - Higiene sanitasi tim relawan sesuai SOP
+  - Sistem pembuangan limbah
+  - Suplai air bersih sesuai standar
+• Jumlah: 1 orang per 5 SPPG (mobile)
+
+*5. ASISTEN LAPANGAN (ASLAP)* ← *POSISI ANDA*
+• Tugas sesuai JUKNIS Pasal 4.9.2:
+  - Pelaksana terdepan hubungan eksternal
+  - Koordinasi dengan satuan Pendidikan & Posyandu
+  - Pastikan proses produksi selesai tepat waktu
+  - Pastikan ketersediaan bahan baku
+  - Update data porsi produksi & distribusi harian
+  - Jaga hubungan harmonis dgn satuan Pendidikan
+  - Monitoring & evaluasi packaging, distribusi, kebersihan, pencuci alat
+  - Atur pengeluaran operasional (bensin, gas, dll)
+  - QC, pencatatan & penimbangan bahan baku masuk
+• Jumlah: 1 orang per SPPG
+
+*6. JURU MASAK*
+• Status: Minimal bersertifikat (untuk kapasitas >3.000 PM)
+• Tugas:
+  - Memasak & mengolah bahan makanan
+  - Memastikan rasa & kematangan sesuai standar
+  - Mengawasi tim pengolahan
+• Jumlah: 1 orang per SPPG
+
+*7. KOORDINATOR TIM (dari relawan)*
+• Koordinator Tim Persiapan Bahan — 4 orang
+• Koordinator Tim Pengolahan — 10 orang
+• Koordinator Tim Pemorsian — 9 orang
+• Koordinator Tim Packing — 1 orang
+• Koordinator Tim Distribusi — 4 orang
+• Koordinator Tim Kebersihan — 2 orang
+• Koordinator Tim Pencuci Alat — 14 orang
+• Keamanan — 2 orang
+• *Total relawan: max 52 orang per SPPG*
+
+*8. STRUKTUR ESELON DI ATASNYA*
+• Koordinator SPPG Regional (Kreg) — Tingkat Provinsi
+• Koordinator SPPG Wilayah (Korwil) — Tingkat Kab/Kota
+• Koordinator SPPG Kecamatan — Tingkat Kecamatan
+• KPPG — Kantor Pelayanan Pemenuhan Gizi
+• BGN — Badan Gizi Nasional Pusat
+"""
+
+JUKNIS_BIAYA = """
+💰 *BIAYA ACUAN PROGRAM MBG (AT COST)*
+
+*Biaya Bahan Baku per Porsi:*
+• Balita, PAUD/TK/RA, SD/MI kls 1-3, ATS <9th
+  → Rp8.000/porsi/hari
+• SD/MI kls 4-6, SMP/MTs, SMA/MA/SMK
+  ATS 9-18th, Pendidik, Tendik, Ibu Hamil, Ibu Menyusui
+  → Rp10.000/porsi/hari
+
+*Biaya Operasional:*
+• Rp3.000/porsi/hari (at cost — bisa kurang/lebih)
+  Meliputi: listrik, gas, air, insentif relawan, insentif
+  kader, insentif satuan pendidikan, BPJS ketenagakerjaan,
+  BBM, sewa kendaraan, internet, pulsa, ATK, dll
+
+*Insentif Fasilitas SPPG:*
+• Rp6.000.000/hari (lumpsum — tetap per hari,
+  tidak tergantung jumlah porsi)
+• Dibayar per 2 mingguan
+
+*CARA HITUNG:*
+Biaya Per Hari = (Jumlah PM Kecil × 8.000) +
+  (Jumlah PM Besar + Tendik + 3B × 10.000) +
+  (Total PM × 3.000 operasional) + 6.000.000
+
+*Sumber Acuan Harga:*
+• HET (Harga Eceran Tertinggi) daerah setempat
+• Survei mingguan: bandingkan 3 penyedia minimal
+  per komoditas, ambil harga terendah
+• At Cost = harga riil, bisa kurang/lebih dari acuan
+"""
+
+JUKNIS_HARI = """
+📅 *HARI OPERASIONAL SPPG 2026*
+
+*Total: 313 hari/tahun*
+Perhitungan: 365 hari - 52 hari Minggu = 313 hari
+
+*Jadwal:*
+• Senin - Sabtu (6 hari kerja/minggu)
+• Termasuk hari libur nasional & cuti bersama
+• Hanya libur hari Minggu
+
+*Hari Pendistribusian MBG:*
+• Hari kerja termasuk libur nasional & cuti bersama
+• Tetap jalan meskipun hari libur sekolah
+  (khusus untuk kelompok 3B yang tetap dilayani)
+
+*Jam Distribusi:*
+• Makan Pagi: 06.00 - 09.00 (kontribusi 20-25% AKG)
+• Makan Siang: 11.00 - 14.00 (kontribusi 30-35% AKG)
+
+*Per Bulan:*
+• Jumlah hari operasional per bulan bervariasi
+  (24-27 hari tergantung jumlah hari Minggu)
+• Contoh: Januari=27, Februari=24, Maret=26, dll
+"""
+
+JUKNIS_PENERIMA = """
+👥 *PENERIMA MANFAAT MBG*
+
+*KELOMPOK PESERTA DIDIK:*
+1. PAUD/TK/RA/TK LB
+2. SD/MI/SD SLB Kelas 1-3
+3. SD/MI/SD SLB Kelas 4-6
+4. SMP/MTs/SMP LB/Pesantren Kelas 1-3
+5. SMA/MA/SMK/SMA LB/Pesantren Kelas 4-6
+6. ATS (Anak Tidak Sekolah) Usia < 9 tahun
+7. ATS Usia 9-18 tahun
+8. Pendidik (Guru, Tutor, Dll)
+9. Tenaga Kependidikan (Staff Sekolah)
+
+*KELOMPOK NON PESERTA DIDIK (3B):*
+10. Balita (6-59 bulan)
+11. Ibu Hamil (semua trimester)
+12. Ibu Menyusui (0-12 bulan pasca melahirkan)
+
+*KETENTUAN:*
+• Radius: max 6 km dari SPPG
+  atau max 30 menit waktu tempuh
+• Makanan wajib dikonsumsi max 4 jam setelah dimasak
+• Kapasitas SPPG: max 2.500 PM
+  (bisa 3.000 jika juru masak bersertifikat)
+*Desil 1 & 2*: prioritas
+"""
+
+JUKNIS_LAPORAN = """
+📋 *LAPORAN WAJIB SPPG*
+
+*HARIAN:*
+• Rekapitulasi Perhitungan Porsi (Lamp 30a)
+• Laporan Harian Penggunaan Dana (Lamp 30b)
+• Uji Organoleptik (Lamp 22) — setiap distribusi
+• BAST MBG (Berita Acara Serah Terima)
+• Daftar hadir Ka.SPPG + Pengawas Gizi + Keuangan
+
+*2 MINGGUAN:*
+• Laporan 2 Mingguan Penggunaan Dana (Lamp 30c)
+  Dikirim ke KPPG/Direktur Wilayah
+
+*BULANAN:*
+• Laporan Bulanan — Summary (Lamp 30d A)
+• Laporan Bulanan — Anggaran (Lamp 30d B)
+• Laporan Bulanan — Penerima Manfaat (Lamp 30d C)
+
+*BUKU BANTU (Real-time):*
+• Buku Neraca Besar (Lamp 30e)
+• Buku Petty Cash (Lamp 30f) — max Rp500rb/trans,
+  max Rp5jt/minggu
+• Buku Bahan Pangan (Lamp 30g)
+• Buku Dana Operasional (Lamp 30h)
+• Buku Insentif Fasilitas (Lamp 30i)
+
+*LAPORAN LAIN:*
+• Laporan Pelaksanaan Kegiatan (Lamp 16) — per 2 minggu
+• Pernyataan Tanggung Jawab (Lamp 30j)
+• Kuitansi & Bukti Tanda Terima (Lamp 30k, 30m)
+• Daftar Nominatif Insentif Relawan (Lamp 30l)
+• Berita Acara Pengalihan Sisa Dana (Lamp 30n)
+• Surat Perjanjian Kerjasama (Lamp 25)
+  — antara Ka.SPPG dgn Penerima Manfaat
+"""
+
+JUKNIS_GIZI = """
+🔬 *STANDAR GIZI & UJI ORGANOLEPTIK*
+
+*STANDAR GIZI:*
+Acuan: Permenkes No. 28 Tahun 2019 tentang AKG
+• Makan Pagi: Kontribusi 20-25% AKG
+• Makan Siang: Kontribusi 30-35% AKG
+
+*KOMPONEN MENU SEIMBANG:*
+• Karbohidrat: Beras, Jagung, Ubi, Kentang, Mie, Sagu
+• Protein Hewani: Ayam, Ikan, Telur, Daging, Udang
+• Protein Nabati: Tempe, Tahu, Kacang-kacangan
+• Sayur: Bayam, Kangkung, Wortel, Brokoli, Buncis, dll
+• Buah: Pisang, Apel, Jeruk, Semangka, Pepaya, Melon
+
+*GLOSARIUM BAHAN PANGAN (Lamp 31):*
+Karbohidrat (14 jenis), Protein Hewani (14 jenis),
+Protein Nabati (7 jenis), Sayur (24 jenis),
+Buah (9 jenis), Bahan Baku Lain (20 jenis)
+
+*UJI ORGANOLEPTIK (Lamp 22):*
+• Dilakukan 2x:
+  1. Sebelum pengantaran (di SPPG)
+  2. Saat tiba di lokasi / sebelum dikonsumsi
+• Parameter nilai 1-5:
+  - Rasa: 1(tidak enak) - 5(sangat enak)
+  - Warna: 1(tidak menarik) - 5(sangat menarik)
+  - Aroma: 1(tidak sedap) - 5(sangat wangi)
+  - Tekstur: 1(tidak sesuai) - 5(sangat sesuai)
+• Form dibawa oleh sopir
+• Kesimpulan: Aman / Tidak aman dikonsumsi
+• Per satuan pendidikan: 2 paket uji
+• Per kelompok 3B: 1 paket uji
+
+*KETENTUAN MAKANAN:*
+• Wajib dikonsumsi max 4 jam setelah dimasak
+• Jika ada Kejadian Menonjol (KM) gangguan pencernaan
+  → laporkan segera
+"""
+
+JUKNIS_KEUANGAN = """
+💳 *MEKANISME KEUANGAN & DANA SPPG*
+
+*SUMBER DANA:*
+• APBN melalui DIPA Badan Gizi Nasional
+• Bantuan Pemerintah (Banper)
+• Mekanisme: Langsung ke VA (Virtual Account) SPPG
+
+*ALUR PENCARIAN DANA:*
+1. Proposal diajukan Yayasan → divalidasi & diverifikasi
+2. Dana awal masuk ke VA SPPG: Rp500.000.000
+3. Top-up otomatis: seminggu sekali berdasarkan
+   laporan harian penggunaan dana
+4. Ceiling maksimal saldo VA: Rp500.000.000
+5. Penarikan Dana: SPM-LS melalui KPPN
+
+*PEMBAGIAN DANA:*
+• Bahan Baku Pangan (sesuai jumlah PM × biaya satuan)
+• Biaya Operasional (listrik, gas, air, insentif, dll)
+• Insentif Fasilitas SPPG (Rp6jt/hari, dibayar 2 mingguan)
+
+*PETTY CASH (Kas Kecil):*
+• Max Rp500.000 per transaksi
+• Max Rp5.000.000 per minggu
+• Digunakan untuk pengeluaran rutin kecil
+• Dicatat di Buku Bantu Petty Cash (Lamp 30f)
+
+*SISA DANA:*
+• Sisa dana per periode DIALIHKAN ke periode berikutnya
+• Dibuatkan Berita Acara Pengalihan Sisa Dana (Lamp 30n)
+
+*PERTANGGUNGJAWABAN:*
+• Laporan 2 mingguan (Lamp 30c)
+• Laporan bulanan (Lamp 30d)
+• Surat Pernyataan Tanggung Jawab (Lamp 30j)
+• Semua pengeluaran harus ada bukti sah (kuitansi)
+"""
+
+JUKNIS_SOP = """
+⚙️ *SOP OPERASIONAL SPPG*
+
+*ALUR PRODUKSI HARIAN:*
+1. Pengadaan/Penerimaan Bahan Baku
+   → Sortir & QC oleh Admin Gudang + Aslap
+   → Timbang & catat di Buku Bahan Pangan
+2. Persiapan Bahan
+   → Cuci, potong, sortir ulang
+   → QC sayur: periksa ulat, busuk, kualitas
+3. Pengolahan (Cooking)
+   → Juru masak & tim memasak sesuai menu
+   → Cek rasa, kematangan, porsi
+4. Pemorsian
+   → Timbang & porsikan per kelompok sasaran
+   → QC lapisan terakhir sebelum packing
+5. Packing & Labeling
+   → Masukkan ke ompreng, label sesuai lokasi
+6. Distribusi
+   → Muat ke kendaraan box alumunium
+   → Antar ke satuan Pendidikan/Posyandu
+   → Sopir bawa form uji organoleptik
+7. Penerimaan di Lokasi
+   → Uji organoleptik oleh PIC satuan Pendidikan
+   → BAST ditandatangani
+   → Makanan dikonsumsi max 4 jam
+8. Pencucian & Pengembalian Ompreng
+   → Ompreng dikembalikan ke SPPG
+   → Dicuci & disterilkan
+9. Pencatatan & Pelaporan
+   → Data produksi, distribusi, waste, masalah
+   → Input ke SIPGN (Sistem Informasi Pemenuhan Gizi Nasional)
+
+*SURVEI HARGA:*
+• Dilakukan mingguan oleh Ka.SPPG + Pengawas Keuangan
+• Bandingkan minimal 3 penyedia per komoditas
+• Acuan HET daerah setempat atau Indeks Kemahalan
+
+*PENANGANAN KEJADIAN MENONJOL (KM):*
+1. Pisahkan produk bermasalah
+2. Catat detail kejadian
+3. Laporkan ke Ka.SPPG & KPPG
+4. Investigasi root cause
+5. Tindakan korektif
+6. Dokumentasi dalam laporan
+"""
 
 
 async def show_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1107,6 +1397,90 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
+
+async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle menu button callbacks — main navigation"""
+    query = update.callback_query
+    await query.answer()
+    action = query.data
+
+    if action == "menu_harian":
+        await query.edit_message_text(
+            "📋 *LAPORAN HARIAN*\n\n"
+            "Ketik /harian untuk memulai input laporan operasional harian.\n\n"
+            "Data yang diisi:\n"
+            "• Target & Produksi\n"
+            "• Rincian penerima manfaat\n"
+            "• Menu hari ini\n"
+            "• Waste makanan (kg)\n"
+            "• Masalah & feedback PM\n"
+            "• Catatan tambahan",
+            parse_mode="Markdown"
+        )
+    elif action == "menu_mingguan":
+        await query.edit_message_text(
+            "📊 *LAPORAN MINGGUAN*\n\n"
+            "Ada 2 cara:\n\n"
+            "1️⃣ *Auto-Summary* (langsung dari data harian)\n"
+            "   Ketik: /mingguan_auto\n\n"
+            "2️⃣ *Manual* (analisa + rekomendasi sendiri)\n"
+            "   Ketik: /mingguan\n\n"
+            "Pilih sesuai kebutuhan.",
+            parse_mode="Markdown"
+        )
+    elif action == "menu_penerima":
+        await query.edit_message_text(
+            "📑 *REPORT PENERIMA MANFAAT*\n\n"
+            "Ketik /penerima untuk update data penerima manfaat.\n\n"
+            "Bisa dari:\n"
+            "• Link Google Sheets\n"
+            "• Upload file CSV\n"
+            "• Input manual\n\n"
+            "Format kolom: Waktu, Tempat, Besar, Tendik, Kecil",
+            parse_mode="Markdown"
+        )
+    elif action == "menu_juknis":
+        keyboard = [
+            [InlineKeyboardButton("🏢 Struktur Organisasi", callback_data="juknis_struktur")],
+            [InlineKeyboardButton("💰 Biaya Acuan", callback_data="juknis_biaya")],
+            [InlineKeyboardButton("📅 Hari Operasional", callback_data="juknis_hari")],
+            [InlineKeyboardButton("👥 Penerima Manfaat", callback_data="juknis_penerima")],
+            [InlineKeyboardButton("📋 Laporan Wajib", callback_data="juknis_laporan")],
+            [InlineKeyboardButton("🔬 Standar Gizi & Organoleptik", callback_data="juknis_gizi")],
+            [InlineKeyboardButton("💳 Keuangan & Dana", callback_data="juknis_keuangan")],
+            [InlineKeyboardButton("⚙️ SOP Operasional", callback_data="juknis_sop")],
+            [InlineKeyboardButton("🔙 Kembali", callback_data="back_menu")],
+        ]
+        await query.edit_message_text(
+            "📚 *JUKNIS SPPG MBG 2026*\n"
+            "Keputusan Kepala BGN No. 401.1 Tahun 2025\n\n"
+            "Pilih topik:",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+    elif action == "menu_status":
+        await show_status(update, context)
+    elif action.startswith("juknis_"):
+        content_map = {
+            "juknis_struktur": JUKNIS_STRUKTUR,
+            "juknis_biaya": JUKNIS_BIAYA,
+            "juknis_hari": JUKNIS_HARI,
+            "juknis_penerima": JUKNIS_PENERIMA,
+            "juknis_laporan": JUKNIS_LAPORAN,
+            "juknis_gizi": JUKNIS_GIZI,
+            "juknis_keuangan": JUKNIS_KEUANGAN,
+            "juknis_sop": JUKNIS_SOP,
+        }
+        content = content_map.get(action, "")
+        if content:
+            keyboard = [[InlineKeyboardButton("🔙 Kembali ke Menu Juknis", callback_data="menu_juknis")]]
+            await query.edit_message_text(
+                content,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown"
+            )
+
+
 async def back_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -1143,7 +1517,24 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def juknis(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(JUKNIS_MENU, parse_mode="Markdown")
+    keyboard = [
+        [InlineKeyboardButton("🏢 Struktur Organisasi", callback_data="juknis_struktur")],
+        [InlineKeyboardButton("💰 Biaya Acuan", callback_data="juknis_biaya")],
+        [InlineKeyboardButton("📅 Hari Operasional", callback_data="juknis_hari")],
+        [InlineKeyboardButton("👥 Penerima Manfaat", callback_data="juknis_penerima")],
+        [InlineKeyboardButton("📋 Laporan Wajib", callback_data="juknis_laporan")],
+        [InlineKeyboardButton("🔬 Standar Gizi & Organoleptik", callback_data="juknis_gizi")],
+        [InlineKeyboardButton("💳 Keuangan & Dana", callback_data="juknis_keuangan")],
+        [InlineKeyboardButton("⚙️ SOP Operasional", callback_data="juknis_sop")],
+        [InlineKeyboardButton("🔙 Kembali", callback_data="back_menu")],
+    ]
+    await update.message.reply_text(
+        "📚 *JUKNIS SPPG MBG 2026*\n"
+        "Keputusan Kepala BGN No. 401.1 Tahun 2025\n\n"
+        "Pilih topik:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown"
+    )
 
 
 async def safe_reply(update, text, **kwargs):
@@ -1195,7 +1586,7 @@ def main():
     app.add_handler(CommandHandler("status", show_status))
     app.add_handler(CommandHandler("mingguan_auto", mingguan_auto))
     app.add_handler(CallbackQueryHandler(back_menu, pattern="^back_menu$"))
-    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^menu_"))
+    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(menu_|juknis_)"))
 
     # ── Harian conversation ──
     harian_conv = ConversationHandler(
