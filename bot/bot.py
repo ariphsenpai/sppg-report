@@ -141,6 +141,22 @@ JUKNIS_MENU = """
 • Survei harga mingguan (min 3 penyedia per komoditas)
 • Makanan wajib dikonsumsi max 4 jam setelah dimasak
 • Kapasitas SPPG: max 2.500 PM (3.000 dgn juru masak bersertifikat)
+
+📦 *PRODUKSI & DISTRIBUSI*
+• Tahap: Penerimaan → Persiapan → Pengolahan → Pemorsian → Packing → Distribusi
+• QC di setiap tahap: sortir, timbang, uji rasa/kematangan
+• Packing: ompreng + label sesuai lokasi satuan Pendidikan
+• Distribusi: kendaraan box alumunium, sopir bawa form organoleptik
+• Penerimaan di lokasi: BAST tertanda, konsumsi max 4 jam
+• Pengembalian ompreng: dicuci & disterilkan di SPPG
+
+📊 *MONITORING & EVALUASI*
+• Monitoring harian: produksi, distribusi, waste, masalah
+• Input data ke SIPGN setiap hari
+• Evaluasi menu: berdasarkan waste & feedback penerima
+• Monitoring petty cash + insentif relawan
+• Evaluasi kinerja relawan per shift
+• Laporan bulanan evaluasi + tindakan korektif KM (Kejadian Menonjol)
 """
 
 
@@ -166,17 +182,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply,
         parse_mode="Markdown"
     )
-
-
-JUKNIS_MENU = """
-📚 *JUKNIS SPPG MBG 2026*
-Keputusan Kepala BGN No. 401.1 Tahun 2025
-
-Pilih menu untuk detail:
-"""
-
-# ── JUKNIS SUB MENU CONTENT ──
-
 JUKNIS_STRUKTUR = """
 🏢 *STRUKTUR ORGANISASI SPPG*
 
@@ -1449,6 +1454,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🔬 Standar Gizi & Organoleptik", callback_data="juknis_gizi")],
             [InlineKeyboardButton("💳 Keuangan & Dana", callback_data="juknis_keuangan")],
             [InlineKeyboardButton("⚙️ SOP Operasional", callback_data="juknis_sop")],
+            [InlineKeyboardButton("📦 Produksi & Distribusi", callback_data="juknis_produksi")],
+            [InlineKeyboardButton("📊 Monitoring & Evaluasi", callback_data="juknis_monitoring")],
             [InlineKeyboardButton("🔙 Kembali", callback_data="back_menu")],
         ]
         await query.edit_message_text(
@@ -1470,6 +1477,57 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "juknis_gizi": JUKNIS_GIZI,
             "juknis_keuangan": JUKNIS_KEUANGAN,
             "juknis_sop": JUKNIS_SOP,
+            "juknis_produksi": (
+                "📦 *PRODUKSI & DISTRIBUSI*\n"
+                "\n"
+                "*ALUR PRODUKSI HARIAN:*\n"
+                "1. Penerimaan Bahan Baku\n"
+                "   → Sortir & QC oleh Admin Gudang + Asisten Lapangan\n"
+                "   → Timbang & catat di Buku Bahan Pangan\n"
+                "2. Persiapan Bahan\n"
+                "   → Cuci, potong, sortir ulang\n"
+                "   → QC sayur: periksa ulat, busuk, kualitas\n"
+                "3. Pengolahan (Cooking)\n"
+                "   → Juru masak & tim memasak sesuai menu\n"
+                "   → Cek rasa, kematangan, porsi\n"
+                "4. Pemorsian\n"
+                "   → Timbang & porsikan per kelompok sasaran\n"
+                "   → QC lapisan terakhir sebelum packing\n"
+                "5. Packing & Labeling\n"
+                "   → Masukkan ke ompreng, label sesuai lokasi\n"
+                "6. Distribusi\n"
+                "   → Muat ke kendaraan box alumunium\n"
+                "   → Antar ke satuan Pendidikan/Posyandu\n"
+                "   → Sopir bawa form uji organoleptik\n"
+                "7. Penerimaan di Lokasi\n"
+                "   → Uji organoleptik oleh PIC satuan Pendidikan\n"
+                "   → BAST ditandatangani\n"
+                "   → Makanan dikonsumsi max 4 jam\n"
+                "8. Pencucian & Pengembalian Ompreng\n"
+                "   → Ompreng dikembalikan ke SPPG\n"
+                "   → Dicuci & disterilkan\n"
+            ),
+            "juknis_monitoring": (
+                "📊 *MONITORING & EVALUASI*\n"
+                "\n"
+                "*MONITORING HARIAN:*\n"
+                "• Data produksi, distribusi, waste, masalah\n"
+                "• Input ke SIPGN setiap hari\n"
+                "• Monitoring petty cash & realisasi insentif relawan\n"
+                "\n"
+                "*EVALUASI BERKALA:*\n"
+                "• Evaluasi menu: berdasarkan sisa/waste & feedback penerima\n"
+                "• Evaluasi kinerja relawan per shift\n"
+                "• Evaluasi keuangan: realisasi vs anggaran bulanan\n"
+                "\n"
+                "*KEJADIAN MENONJOL (KM):*\n"
+                "1. Pisahkan produk bermasalah\n"
+                "2. Catat detail kejadian\n"
+                "3. Laporkan ke Ka.SPPG & KPPG\n"
+                "4. Investigasi root cause\n"
+                "5. Tindakan korektif\n"
+                "6. Dokumentasi dalam laporan bulanan\n"
+            ),
         }
         content = content_map.get(action, "")
         if content:
@@ -1526,12 +1584,12 @@ async def juknis(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🔬 Standar Gizi & Organoleptik", callback_data="juknis_gizi")],
         [InlineKeyboardButton("💳 Keuangan & Dana", callback_data="juknis_keuangan")],
         [InlineKeyboardButton("⚙️ SOP Operasional", callback_data="juknis_sop")],
-        [InlineKeyboardButton("🔙 Kembali", callback_data="back_menu")],
+        [InlineKeyboardButton("📦 Produksi & Distribusi", callback_data="juknis_produksi")],
+        [InlineKeyboardButton("📊 Monitoring & Evaluasi", callback_data="juknis_monitoring")],
+        [InlineKeyboardButton("🔙 Menu Utama", callback_data="back_menu")],
     ]
     await update.message.reply_text(
-        "📚 *JUKNIS SPPG MBG 2026*\n"
-        "Keputusan Kepala BGN No. 401.1 Tahun 2025\n\n"
-        "Pilih topik:",
+        JUKNIS_MENU,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
@@ -1577,7 +1635,16 @@ def main():
         sys.exit(1)
 
     # Create application
-    app = Application.builder().token(token).build()
+    app = (
+        Application.builder()
+        .token(token)
+        .connect_timeout(30.0)
+        .read_timeout(30.0)
+        .get_updates_connect_timeout(30.0)
+        .get_updates_read_timeout(30.0)
+        .pool_timeout(30.0)
+        .build()
+    )
 
     # ── Simple commands ──
     app.add_handler(CommandHandler("start", start))
